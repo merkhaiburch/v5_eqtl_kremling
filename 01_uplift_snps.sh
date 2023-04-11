@@ -9,7 +9,7 @@ set \
 # Author.... Merritt Khaipho-Burch
 # Contact... mbb262@cornell.edu
 # Date...... 2023-03-23
-# Updated... 2023-03-27
+# Updated... 2023-04-10
 #
 # Description:
 # Uplift Hapmap 3.2.1 SNPs from Ranstein et al 2021 to v5
@@ -26,6 +26,9 @@ mkdir -p $HOME_DIR_GENO
 mkdir -p $V4_DIR
 mkdir -p $V5_DIR
 
+
+## Gather data -----------------------------------------------------------------
+
 # Get SNPs from cbsu
 scp mbb262@cbsublfs1.biohpc.cornell.edu:/data1/users/gr226/Hmp321/imputed/AGPv4/*vcf.gz $V4_DIR
 
@@ -33,7 +36,11 @@ scp mbb262@cbsublfs1.biohpc.cornell.edu:/data1/users/gr226/Hmp321/imputed/AGPv4/
 wget https://download.maizegdb.org/Zm-B73-REFERENCE-NAM-5.0/chain_files/B73_RefGen_v4_to_Zm-B73-REFERENCE-NAM-5.0.chain -P $HOME_DIR_GENO
 wget https://download.maizegdb.org/Zm-B73-REFERENCE-NAM-5.0/Zm-B73-REFERENCE-NAM-5.0.fa.gz -P $HOME_DIR_GENO
 
-# Use crossmap to uplift files
+# Unzip genome
+gunzip $HOME_DIR_GENO/Zm-B73-REFERENCE-NAM-5.0.fa.gz
+
+
+## Use crossmap to uplift files ------------------------------------------------
 # Set path
 export PYTHONPATH=/programs/CrossMap-0.6.1/lib64/python3.9/site-packages:/programs/CrossMap-0.6.1/lib/python3.9/site-packages
 export PATH=/programs/CrossMap-0.6.1/bin:$PATH
@@ -50,7 +57,29 @@ do
     $HOME_DIR_GENO/Zm-B73-REFERENCE-NAM-5.0.fa \
     $V5_DIR/hmp321_282_agpv5_merged_chr${CHROM}.vcf
 
-  bgzip --threads 20 $V5_DIR/nam_ibm_imputed_v5_chr${CHROM}.vcf
+  bgzip --threads 20 $V5_DIR/hmp321_282_agpv5_merged_chr${CHROM}.vcf
 
   echo "I just finished chr ${CHROM}"
 done
+
+
+## Sort genotype file ----------------------------------------------------------
+for CHROM in {1..10}
+do
+  echo "I am on chr ${CHROM}"
+
+  /home/mbb262/bioinformatics/tassel-5-standalone/run_pipeline.pl \
+    -debug $V5_DIR/debug2.txt \
+    -Xmx420g \
+    -maxThreads 60 \
+    -SortGenotypeFilePlugin \
+    -inputFile $V5_DIR/hmp321_282_agpv5_merged_chr${CHROM}.vcf.gz \
+    -outputFile $V5_DIR/hmp321_282_agpv5_merged_chr${CHROM}_sorted.vcf.gz
+
+  echo "I just finished chr ${CHROM}"
+done
+
+# Alternatively
+bgzip -c hmp321_282_agpv5_merged_chr10.vcf > hmp321_282_agpv5_merged_chr10.vcf.gz
+tabix -p vcf hmp321_282_agpv5_merged_chr10.vcf.gz
+/programs/bcftools-1.15.1-r/bin/bcftools sort -Oz hmp321_282_agpv5_merged_chr10.vcf.gz -o hmp321_282_agpv5_merged_chr10_sorted_bcf.vcf.gz

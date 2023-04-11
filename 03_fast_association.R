@@ -28,7 +28,7 @@ library(data.table)
 library(rTASSEL)
 
 # Start logging
-rTASSEL::startLogger(fullPath = NULL, fileName = NULL)
+rTASSEL::startLogger(fullPath = "/workdir/mbb262/moaseq/mapping/results", fileName = "debug_fast_association.txt")
 
 
 # ------------------------------------------------------------------------------
@@ -114,7 +114,7 @@ names(tasPhenoDF[1])
 # ------------------------------------------------------------------------------
 
 # Local variables
-vcf <- "/workdir/mbb262/moaseq/genotypes/"
+vcf <- "/workdir/mbb262/moaseq/genotypes/v5/"
 
 # Set directory for results
 setwd("/workdir/mbb262/moaseq/mapping/results/")
@@ -124,7 +124,7 @@ lapply(seq_len(10), function(i) {
   message("I am on chromosome ", i)
   
   # Load in genotype table
-  vcf <-  rTASSEL::readGenotypeTableFromPath(path = paste(vcf,"hmp321_282_agpv4_merged_chr", i, "_imputed_goodman282.vcf.gz", sep = ""),
+  vcf <-  rTASSEL::readGenotypeTableFromPath(path = paste(vcf,"hmp321_282_agpv5_merged_chr", i, ".vcf.gz", sep = ""),
                                              keepDepth = FALSE)
   print(vcf)
   
