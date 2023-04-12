@@ -57,6 +57,7 @@ lapply(pcs_peers, function(x) dim(x))
 pcs_peers <- lapply(pcs_peers, function(x) x[,1:31])
 lapply(pcs_peers, function(x) dim(x))
 
+
 # ------------------------------------------------------------------------------
 # Load in Kremling expression phenotypes (in v3)
 # ------------------------------------------------------------------------------
@@ -77,7 +78,7 @@ names(expression_phenos) <- short_names # rename each element in the list to the
 
 # Check
 lapply(expression_phenos, function(x) x[1:5,1:5])
-lapply(expression_phenos, function(x) dim(x))
+lapply(expression_phenos, function(x) dim(x)-30)
 
 
 # ------------------------------------------------------------------------------
@@ -124,7 +125,7 @@ lapply(seq_len(10), function(i) {
   message("I am on chromosome ", i)
   
   # Load in genotype table
-  vcf <-  rTASSEL::readGenotypeTableFromPath(path = paste(vcf,"hmp321_282_agpv5_merged_chr", i, ".vcf.gz", sep = ""),
+  vcf <-  rTASSEL::readGenotypeTableFromPath(path = paste(vcf,"hmp321_282_agpv5_merged_chr", i, "_sorted.vcf.gz", sep = ""),
                                              keepDepth = FALSE)
   print(vcf)
   
@@ -158,34 +159,4 @@ lapply(seq_len(10), function(i) {
       outputFile = paste("chrom_", i, "_fast_assoc_results_", names(tasPhenoDF)[j], "_Kremling_2018", sep = ""))
   })
 })
-
-
-## Go from v3 to v5 gene ids ---------------------------------------------------
-
-# Load in cross reference table, rename columns
-v4_v5 <- read.delim("/workdir/mbb262/moaseq/mapping/B73v4_B73v5_liftoff_genemodel_CDS_xref_shortened.txt", header = TRUE)
-colnames(v4_v5) <- c("v4", "v5")
-
-# Remove any genes that did not map
-v4_v5 <- v4_v5 %>% filter(!grepl('chr', v5)) 
-v4_v5 <- v4_v5 %>% filter(!grepl('scaf', v5))
-
-# only get unique v4 ids
-v4_v5 <- v4_v5 %>% distinct(v4, .keep_all = TRUE)
-
-# Change names by:
-# 1) Loop though each file in the results directory, load 1 in at a time
-# 2) merge v3 gene id names with v5 names
-# 3) drop v3 names, rearrange columns so v5 names are first
-# 4) export in new directory
-
-# Find all files to iterate through
-results_dir <- "/workdir/mbb262/moaseq/mapping/results/"
-fast_assoc_results <- list.files(results_dir, pattern="*.txt")
-
-# Iterate through files
-
-
-
-
 
