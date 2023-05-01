@@ -107,7 +107,6 @@ tasPhenoDF <- lapply(expression_pcs_peers, function(x) {rTASSEL::readPhenotypeFr
 
 # Check
 tasPhenoDF
-names(tasPhenoDF[1])
 
 
 # ------------------------------------------------------------------------------
@@ -120,43 +119,75 @@ vcf <- "/workdir/mbb262/moaseq/genotypes/v5/"
 # Set directory for results
 setwd("/workdir/mbb262/moaseq/mapping/results/")
 
+# # Run fast association
+# lapply(seq_len(10), function(i) {
+#   message("I am on chromosome ", i)
+#   
+#   # Load in genotype table
+#   vcf <-  rTASSEL::readGenotypeTableFromPath(path = paste(vcf,"hmp321_282_agpv5_merged_chr", i, "_sorted.vcf.gz", sep = ""),
+#                                              keepDepth = FALSE)
+#   print(vcf)
+#   
+#   # Iterate through phenotypes
+#   lapply(seq_len(length(tasPhenoDF)), function(j) {
+#     message("I am on phenotype file ", names(tasPhenoDF)[j])
+#     
+#     # Join genotypes with (phenotypes + PCs + PEERs)
+#     tasPhenoDFGenotype <- rTASSEL::readGenotypePhenotype(
+#       genoPathOrObj = vcf,
+#       phenoPathDFOrObj = tasPhenoDF[[j]])
+#     print(tasPhenoDFGenotype)
+#     
+#     # Do a light MAF filter to remove invariant sites
+#     tasGenoPhenoFilt <- rTASSEL::filterGenotypeTableSites(
+#       tasObj = tasPhenoDFGenotype,
+#       siteRangeFilterType = "none",
+#       siteMinAlleleFreq = 0.05,
+#       siteMaxAlleleFreq = 1.0,
+#       siteMinCount = 100)
+#     
+#     # Run fast association, write files to disk.
+#     rTASSEL::assocModelFitter(
+#       tasObj = tasGenoPhenoFilt,
+#       formula = . ~ ., 
+#       fitMarkers = TRUE,
+#       kinship = NULL,
+#       fastAssociation = TRUE,
+#       maxP = p_value,
+#       maxThreads = numThreads,
+#       outputFile = paste("chrom_", i, "_fast_assoc_results_", names(tasPhenoDF)[j], "_Kremling_2018", sep = ""))
+#   })
+# })
+
+
+## Count the number of SNPs post merge -----------------------------------------
+
+# Create a subsetted list
+tasPhenoDF_sub <- tasPhenoDF$GRoot
+
 # Run fast association
 lapply(seq_len(10), function(i) {
   message("I am on chromosome ", i)
   
   # Load in genotype table
-  vcf <-  rTASSEL::readGenotypeTableFromPath(path = paste(vcf,"hmp321_282_agpv5_merged_chr", i, "_sorted.vcf.gz", sep = ""),
+  tas_vcf <-  rTASSEL::readGenotypeTableFromPath(path = paste(vcf,"hmp321_282_agpv5_merged_chr", i, "_sorted.vcf.gz", sep = ""),
                                              keepDepth = FALSE)
-  print(vcf)
   
-  # Iterate through phenotypes
-  lapply(seq_len(length(tasPhenoDF)), function(j) {
-    message("I am on phenotype file ", names(tasPhenoDF)[j])
-    
-    # Join genotypes with (phenotypes + PCs + PEERs)
-    tasPhenoDFGenotype <- rTASSEL::readGenotypePhenotype(
-      genoPathOrObj = vcf,
-      phenoPathDFOrObj = tasPhenoDF[[j]])
-    print(tasPhenoDFGenotype)
-    
-    # Do a light MAF filter to remove invariant sites
-    tasGenoPhenoFilt <- rTASSEL::filterGenotypeTableSites(
-      tasObj = tasPhenoDFGenotype,
-      siteRangeFilterType = "none",
-      siteMinAlleleFreq = 0.05,
-      siteMaxAlleleFreq = 1.0,
-      siteMinCount = 100)
-    
-    # Run fast association, write files to disk.
-    rTASSEL::assocModelFitter(
-      tasObj = tasGenoPhenoFilt,
-      formula = . ~ ., 
-      fitMarkers = TRUE,
-      kinship = NULL,
-      fastAssociation = TRUE,
-      maxP = p_value,
-      maxThreads = numThreads,
-      outputFile = paste("chrom_", i, "_fast_assoc_results_", names(tasPhenoDF)[j], "_Kremling_2018", sep = ""))
-  })
+  # Join genotypes with (phenotypes + PCs + PEERs)
+  tasPhenoDF_subGenotype <- rTASSEL::readGenotypePhenotype(
+    genoPathOrObj = tas_vcf,
+    phenoPathDFOrObj = tasPhenoDF_sub)
+  
+  # Do a light MAF filter to remove invariant sites
+  tasGenoPhenoFilt <- rTASSEL::filterGenotypeTableSites(
+    tasObj = tasPhenoDF_subGenotype,
+    siteRangeFilterType = "none",
+    siteMinAlleleFreq = 0.05,
+    siteMaxAlleleFreq = 1.0,
+    siteMinCount = 100)
+  
+  # Return count of SNPs
+  print(tasGenoPhenoFilt)
+  
 })
 
